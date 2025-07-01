@@ -1,75 +1,65 @@
-@extends('layouts.app')
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            Suppliers
+        </h2>
+    </x-slot>
 
-@section('content')
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-teal fw-bold mb-0">Supplier Directory</h2>
-        <a href="{{ route('suppliers.create') }}" class="btn btn-teal-primary btn-lg rounded-pill shadow-sm">
-            <i class="bi bi-plus-circle me-2"></i> Add New Supplier
-        </a>
-    </div>
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
+                    <div class="flex justify-between mb-6">
+                        <h3 class="text-2xl font-semibold">Supplier List</h3>
+                        <a href="{{ route('suppliers.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            Add New Supplier
+                        </a>
+                    </div>
 
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show shadow-sm rounded-3" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+                    @if (session('success'))
+                        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                            <span class="block sm:inline">{{ session('success') }}</span>
+                        </div>
+                    @endif
 
-    <div class="card shadow-lg border-0 rounded-4">
-        <div class="card-body p-0">
-            @if($suppliers->isEmpty())
-                <div class="text-center p-5">
-                    <h4 class="text-muted mb-3">No suppliers found.</h4>
-                    <p class="text-muted">It looks like your supplier list is empty. Start by adding a new supplier!</p>
-                    <a href="{{ route('suppliers.create') }}" class="btn btn-teal-primary mt-3">
-                        <i class="bi bi-plus-circle me-2"></i> Add First Supplier
-                    </a>
-                </div>
-            @else
-                <div class="table-responsive">
-                    <table class="table table-hover table-borderless align-middle mb-0">
-                        <thead class="bg-teal text-white rounded-top-4">
-                            <tr>
-                                <th scope="col" class="py-3 ps-4 rounded-top-start-4">Name</th>
-                                <th scope="col" class="py-3">Phone</th>
-                                <th scope="col" class="py-3">Email</th>
-                                <th scope="col" class="py-3">GSTIN</th>
-                                <th scope="col" class="py-3">Address</th>
-                                <th scope="col" class="py-3 text-center rounded-top-end-4">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($suppliers as $supplier)
-                                <tr class="border-bottom">
-                                    <td class="ps-4 py-3 fw-semibold">{{ $supplier->name }}</td>
-                                    <td>{{ $supplier->phone ?? 'N/A' }}</td>
-                                    <td>{{ $supplier->email ?? 'N/A' }}</td>
-                                    <td>{{ $supplier->gstin ?? 'N/A' }}</td>
-                                    <td>{{ $supplier->address ?? 'N/A' }}</td>
-                                    <td class="text-center py-3">
-                                        <div class="d-flex justify-content-center gap-2">
-                                            {{-- The View button is now active --}}
-                                            <a href="{{ route('suppliers.show', $supplier->id) }}" class="btn btn-outline-info btn-sm rounded-pill px-3">View</a>
-                                            <a href="{{ route('suppliers.edit', $supplier->id) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">Edit</a>
-                                            <form action="{{ route('suppliers.destroy', $supplier->id) }}" method="POST" class="d-inline">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white">
+                            <thead class="bg-gray-800 text-white">
+                                <tr>
+                                    <th class="w-1/6 text-left py-3 px-4 uppercase font-semibold text-sm">Name</th>
+                                    <th class="w-1/6 text-left py-3 px-4 uppercase font-semibold text-sm">Phone</th>
+                                    <th class="w-1/6 text-left py-3 px-4 uppercase font-semibold text-sm">Email</th>
+                                    <th class="w-1/6 text-left py-3 px-4 uppercase font-semibold text-sm">Drug License</th> <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Address</th>
+                                    <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-700">
+                                @forelse ($suppliers as $supplier)
+                                    <tr class="border-b">
+                                        <td class="text-left py-3 px-4">{{ $supplier->name }}</td>
+                                        <td class="text-left py-3 px-4">{{ $supplier->phone }}</td>
+                                        <td class="text-left py-3 px-4">{{ $supplier->email }}</td>
+                                        <td class="text-left py-3 px-4">{{ $supplier->drug_license ?? 'N/A' }}</td> <td class="text-left py-3 px-4">{{ $supplier->address }}</td>
+                                        <td class="text-left py-3 px-4">
+                                            <a href="{{ route('suppliers.show', $supplier->id) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                                            <a href="{{ route('suppliers.edit', $supplier->id) }}" class="text-yellow-600 hover:text-yellow-900 ml-2">Edit</a>
+                                            <form action="{{ route('suppliers.destroy', $supplier->id) }}" method="POST" class="inline-block ml-2">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="return confirm('Are you sure you want to delete this supplier?')">Delete</button>
+                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Are you sure?')">Delete</button>
                                             </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">No suppliers found.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            @endif
+            </div>
         </div>
     </div>
-
-    <div class="d-flex justify-content-center mt-5">
-        {{ $suppliers->links('pagination::bootstrap-5') }}
-    </div>
-</div>
-@endsection
+</x-app-layout>

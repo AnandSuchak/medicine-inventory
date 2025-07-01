@@ -7,9 +7,14 @@ use App\Repositories\Interfaces\CustomerRepositoryInterface;
 
 class CustomerRepository implements CustomerRepositoryInterface
 {
-    public function allPaginated($perPage = 10)
+    public function all()
     {
-        return Customer::latest()->paginate($perPage);
+        return Customer::latest()->get();
+    }
+
+    public function find($id)
+    {
+        return Customer::findOrFail($id);
     }
 
     public function create(array $data)
@@ -17,17 +22,23 @@ class CustomerRepository implements CustomerRepositoryInterface
         return Customer::create($data);
     }
 
-    public function update($customer, array $data)
+    public function update($id, array $data)
     {
-        return $customer->update($data);
+        $customer = $this->find($id);
+        $customer->update($data);
+        return $customer;
     }
 
-    public function delete($customer)
+    public function delete($id)
     {
+        $customer = $this->find($id);
         return $customer->delete();
     }
-        public function findById(int $id)
+
+    public function search($query)
     {
-        return Customer::find($id); // This will return the Customer model or null if not found
+        return Customer::where('shop_name', 'like', "%{$query}%")
+            ->orWhere('phone', 'like', "%{$query}%")
+            ->get();
     }
 }

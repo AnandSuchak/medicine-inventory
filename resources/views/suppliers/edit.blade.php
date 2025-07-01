@@ -1,57 +1,60 @@
-@extends('layouts.app')
-
-@section('content')
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-7">
-            <h2 class="mb-4 text-center text-teal fw-bold">Edit Supplier</h2>
-
-            @if($errors->any())
-                <div class="alert alert-danger alert-dismissible fade show shadow-sm rounded-3" role="alert">
-                    <ul class="mb-0 ps-3">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
-
-            <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-body p-4 p-md-5">
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            Edit Supplier
+        </h2>
+    </x-slot>
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
                     <form action="{{ route('suppliers.update', $supplier->id) }}" method="POST">
                         @csrf
                         @method('PUT')
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="name" class="block font-medium text-sm text-gray-700">Name</label>
+                                <input type="text" name="name" id="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('name', $supplier->name) }}" required>
+                                @error('name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
 
-                        <div class="mb-4">
-                            <label for="name" class="form-label fw-semibold">Supplier Name <span class="text-danger">*</span></label>
-                            <input type="text" name="name" id="name" class="form-control form-control-lg rounded-pill" value="{{ old('name', $supplier->name) }}" placeholder="Enter supplier's full name" required>
+                            <div>
+                                <label for="phone" class="block font-medium text-sm text-gray-700">Phone</label>
+                                <input type="text" name="phone" id="phone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('phone', $supplier->phone) }}" required>
+                                @error('phone')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div>
+                                <label for="email" class="block font-medium text-sm text-gray-700">Email</label>
+                                <input type="email" name="email" id="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('email', $supplier->email) }}">
+                                @error('email')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div>
+                                <label for="gstin" class="block font-medium text-sm text-gray-700">GSTIN</label>
+                                <input type="text" name="gstin" id="gstin" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('gstin', $supplier->gstin) }}">
+                                @error('gstin')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label for="drug_license" class="block font-medium text-sm text-gray-700">Drug License</label>
+                                <input type="text" name="drug_license" id="drug_license" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('drug_license', $supplier->drug_license) }}">
+                                @error('drug_license')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label for="address" class="block font-medium text-sm text-gray-700">Address</label>
+                                <textarea name="address" id="address" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>{{ old('address', $supplier->address) }}</textarea>
+                                @error('address')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label for="email" class="form-label fw-semibold">Email</label>
-                            <input type="email" name="email" id="email" class="form-control form-control-lg rounded-pill" value="{{ old('email', $supplier->email) }}" placeholder="e.g., info@supplier.com">
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="phone" class="form-label fw-semibold">Phone</label>
-                            <input type="text" name="phone" id="phone" class="form-control form-control-lg rounded-pill" value="{{ old('phone', $supplier->phone) }}" placeholder="e.g., +91 9876543210">
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="gstin" class="form-label fw-semibold">GSTIN</label>
-                            <input type="text" name="gstin" id="gstin" class="form-control form-control-lg rounded-pill" value="{{ old('gstin', $supplier->gstin) }}" placeholder="e.g., 27ABCDE1234F1Z5">
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="address" class="form-label fw-semibold">Address</label>
-                            <textarea name="address" id="address" class="form-control rounded-3" rows="4" placeholder="Full address including city, state, zip">{{ old('address', $supplier->address) }}</textarea>
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center mt-5">
-                            <a href="{{ route('suppliers.index') }}" class="btn btn-outline-secondary btn-lg rounded-pill px-4">Cancel</a>
-                            <button type="submit" class="btn btn-teal-primary btn-lg rounded-pill px-5 shadow">
-                                <i class="bi bi-arrow-clockwise me-2"></i> Update Supplier
+                        <div class="mt-6 flex justify-end">
+                            <a href="{{ route('suppliers.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                                Cancel
+                            </a>
+                            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-3">
+                                Update Supplier
                             </button>
                         </div>
                     </form>
@@ -59,5 +62,4 @@
             </div>
         </div>
     </div>
-</div>
-@endsection
+</x-app-layout>

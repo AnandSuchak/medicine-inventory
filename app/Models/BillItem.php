@@ -4,67 +4,34 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\BatchMedicine;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BillItem extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'bill_id',
         'medicine_id',
-        'batch_id',
+        'medicine_batch_id', // This is the new, correct link
         'quantity',
-        'unit_price',
-        'gst_rate_percentage',
-        'item_gst_amount',
-        'sub_total',
-        'total_amount_after_tax',
+        'price',
+        'discount',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'quantity' => 'integer',
-        'unit_price' => 'decimal:2',
-        'gst_rate_percentage' => 'decimal:2',
-        'item_gst_amount' => 'decimal:2',
-        'sub_total' => 'decimal:2',
-        'total_amount_after_tax' => 'decimal:2',
-    ];
-
-    /**
-     * Get the bill that owns the bill item.
-     */
-    public function bill()
+    public function bill(): BelongsTo
     {
         return $this->belongsTo(Bill::class);
     }
 
-    /**
-     * Get the medicine associated with the bill item.
-     */
-    public function medicine()
+    public function medicine(): BelongsTo
     {
         return $this->belongsTo(Medicine::class);
     }
 
-    /**
-     * Get the specific batch medicine record associated with this bill item.
-     * This links to the 'batch_medicines' table using the 'batch_id' foreign key.
-     */
-    public function batchMedicine() // Renamed to 'batchMedicine'
+    // This relationship now correctly points to the specific manufacturer batch that was sold.
+    public function medicineBatch(): BelongsTo
     {
-        // Specify the foreign key 'batch_id' on bill_items table
-        // and the related model BatchMedicine::class
-        return $this->belongsTo(BatchMedicine::class, 'batch_id');
+        return $this->belongsTo(MedicineBatch::class);
     }
 }

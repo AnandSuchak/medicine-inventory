@@ -5,68 +5,40 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany; // Add this for billItems()
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Medicine extends Model
 {
     use HasFactory;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'medicines';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
         'unit',
         'description',
+        'gst',
+        'pack_size',
+        'mfg_company_name',
+        'hsn_code', // Make sure this exists from previous steps
     ];
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        // No specific casts needed for typical Medicine model
-    ];
-
-    // --- Relationships ---
-
-    /**
-     * Get the batches that the medicine belongs to.
-     * Defines the many-to-many relationship with Batch model.
-     */
-    public function batches(): BelongsToMany
+    
+    // Relationship to the actual inventory stock
+    public function medicineBatches(): HasMany
     {
-        return $this->belongsToMany(Batch::class)
-                    ->withPivot('quantity', 'price', 'ptr', 'gst_percent', 'expiry_date')
+        return $this->hasMany(MedicineBatch::class);
+    }
+
+    public function purchaseBills(): BelongsToMany
+    {
+        // Corrected withPivot
+        return $this->belongsToMany(PurchaseBill::class, 'purchase_bill_medicine')
+                    ->withPivot('quantity', 'price', 'discount_percentage', 'batch_no')
                     ->withTimestamps();
     }
 
-    /**
-     * Get the bill items that belong to this medicine.
-     * This is useful for tracking sales of a specific medicine.
-     */
-    public function billItems(): HasMany // Add this new relationship
+    public function billItems(): HasMany
     {
         return $this->hasMany(BillItem::class);
-    }
-
-        /**
-     * Get the batch medicines associated with the Medicine.
-     * This establishes a one-to-many relationship: One Medicine can be in many BatchMedicine records.
-     */
-    public function batchMedicines()
-    {
-        // Assuming 'medicine_id' is the foreign key in the 'batch_medicines' table
-        return $this->hasMany(BatchMedicine::class);
     }
 }

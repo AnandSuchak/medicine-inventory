@@ -1,54 +1,58 @@
-@extends('layouts.app')
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            Edit Medicine
+        </h2>
+    </x-slot>
 
-@section('content')
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-7">
-            <h2 class="mb-4 text-center text-teal fw-bold">Edit Medicine</h2>
-
-            @if($errors->any())
-                <div class="alert alert-danger alert-dismissible fade show shadow-sm rounded-3" role="alert">
-                    <ul class="mb-0 ps-3">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
-
-            <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-body p-4 p-md-5">
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
                     <form action="{{ route('medicines.update', $medicine->id) }}" method="POST">
                         @csrf
                         @method('PUT')
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="name" class="block font-medium text-sm text-gray-700">Name</label>
+                                <input type="text" name="name" id="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('name', $medicine->name) }}" required>
+                                @error('name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
 
-                        <div class="mb-4">
-                            <label for="name" class="form-label fw-semibold">Medicine Name <span class="text-danger">*</span></label>
-                            <input type="text" name="name" id="name" class="form-control form-control-lg rounded-pill" value="{{ old('name', $medicine->name) }}" placeholder="e.g., Paracetamol, Amoxicillin" required>
+                            <div>
+                                <label for="mfg_company_name" class="block font-medium text-sm text-gray-700">Manufacturing Company</label> <input type="text" name="mfg_company_name" id="mfg_company_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('mfg_company_name', $medicine->mfg_company_name) }}" required>
+                                @error('mfg_company_name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div>
+                                <label for="pack_size" class="block font-medium text-sm text-gray-700">Pack Size</label> <input type="text" name="pack_size" id="pack_size" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('pack_size', $medicine->pack_size) }}" required>
+                                @error('pack_size')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div>
+                                <label for="unit" class="block font-medium text-sm text-gray-700">Unit</label>
+                                <input type="text" name="unit" id="unit" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('unit', $medicine->unit) }}" required>
+                                @error('unit')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
+                            
+                            <div>
+                                <label for="gst" class="block font-medium text-sm text-gray-700">GST (%)</label> <input type="number" step="0.01" name="gst" id="gst" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('gst', $medicine->gst) }}" required>
+                                @error('gst')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label for="description" class="block font-medium text-sm text-gray-700">Description</label>
+                                <textarea name="description" id="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('description', $medicine->description) }}</textarea>
+                                @error('description')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label for="hsn_code" class="form-label fw-semibold">HSN Code <span class="text-danger">*</span></label>
-                            <input type="text" name="hsn_code" id="hsn_code" class="form-control form-control-lg rounded-pill" value="{{ old('hsn_code', $medicine->hsn_code) }}" placeholder="e.g., 3004.90.11" required>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="description" class="form-label fw-semibold">Description</label>
-                            <textarea name="description" id="description" class="form-control rounded-3" rows="3" placeholder="Brief description or usage instructions">{{ old('description', $medicine->description) }}</textarea>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="unit" class="form-label fw-semibold">Unit <span class="text-danger">*</span></label> {{-- Changed from Price --}}
-                            <input type="text" name="unit" id="unit" class="form-control form-control-lg rounded-pill" value="{{ old('unit', $medicine->unit) }}" placeholder="e.g., Tablet, Bottle, Box" required>
-                        </div>
-
-                        {{-- Removed the 'quantity' field as it's not directly on the medicines table --}}
-
-                        <div class="d-flex justify-content-between align-items-center mt-5">
-                            <a href="{{ route('medicines.index') }}" class="btn btn-outline-secondary btn-lg rounded-pill px-4">Cancel</a>
-                            <button type="submit" class="btn btn-teal-primary btn-lg rounded-pill px-5 shadow">
-                                <i class="bi bi-arrow-clockwise me-2"></i> Update Medicine
+                        <div class="mt-6 flex justify-end">
+                            <a href="{{ route('medicines.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                                Cancel
+                            </a>
+                            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-3">
+                                Update Medicine
                             </button>
                         </div>
                     </form>
@@ -56,5 +60,4 @@
             </div>
         </div>
     </div>
-</div>
-@endsection
+</x-app-layout>

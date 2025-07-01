@@ -7,9 +7,9 @@ use App\Repositories\Interfaces\MedicineRepositoryInterface;
 
 class MedicineRepository implements MedicineRepositoryInterface
 {
-    public function allPaginated($perPage = 10)
+    public function all()
     {
-        return Medicine::latest()->paginate($perPage);
+        return Medicine::latest()->get();
     }
 
     public function find($id)
@@ -24,14 +24,19 @@ class MedicineRepository implements MedicineRepositoryInterface
 
     public function update($id, array $data)
     {
-        $medicine = Medicine::findOrFail($id);
+        $medicine = $this->find($id);
         $medicine->update($data);
         return $medicine;
     }
 
     public function delete($id)
     {
-        $medicine = Medicine::findOrFail($id);
+        $medicine = $this->find($id);
         return $medicine->delete();
+    }
+
+    public function search($query)
+    {
+        return Medicine::where('name', 'like', "%{$query}%")->get();
     }
 }

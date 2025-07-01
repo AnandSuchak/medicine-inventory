@@ -6,31 +6,29 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class BatchMedicine extends Model
+class MedicineBatch extends Model
 {
     use HasFactory;
 
-    protected $table = 'batch_medicine';
+    protected $table = 'medicine_batches';
 
     protected $fillable = [
-        'batch_id',
         'medicine_id',
-        'quantity',
-        'price',
-        'ptr',
-        'gst_percent', // <--- Added this
+        'batch_no',
         'expiry_date',
+        'quantity',
+        'purchase_price',
+        'ptr',
+        'mrp',
     ];
 
     protected $casts = [
         'expiry_date' => 'date',
     ];
 
-    public function batch(): BelongsTo
-    {
-        return $this->belongsTo(Batch::class);
-    }
-
+    /**
+     * Get the medicine that this batch belongs to.
+     */
     public function medicine(): BelongsTo
     {
         return $this->belongsTo(Medicine::class);

@@ -1,51 +1,57 @@
-@extends('layouts.app')
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            Add New Customer
+        </h2>
+    </x-slot>
 
-@section('content')
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-7">
-            <h2 class="mb-4 text-center text-teal fw-bold">Add New Customer</h2>
-
-            @if($errors->any())
-                <div class="alert alert-danger alert-dismissible fade show shadow-sm rounded-3" role="alert">
-                    <ul class="mb-0 ps-3">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
-
-            <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-body p-4 p-md-5">
-                    <form action="{{ route('customers.store') }}" method="POST">
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
+                    <form action="{{ route('customers.store') }}" method="POST" id="customer-form">
                         @csrf
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="md:col-span-2">
+                                <label for="shop_name" class="block font-medium text-sm text-gray-700">Shop Name</label> <input type="text" name="shop_name" id="shop_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('shop_name') }}" required>
+                                @error('shop_name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
 
-                        <div class="mb-4">
-                            <label for="name" class="form-label fw-semibold">Customer Name <span class="text-danger">*</span></label>
-                            <input type="text" name="name" id="name" class="form-control form-control-lg rounded-pill" value="{{ old('name') }}" placeholder="Enter customer's full name" required>
+                            <div>
+                                <label for="phone" class="block font-medium text-sm text-gray-700">Phone</label>
+                                <input type="text" name="phone" id="phone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('phone') }}" required>
+                                @error('phone')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div>
+                                <label for="email" class="block font-medium text-sm text-gray-700">Email</label>
+                                <input type="email" name="email" id="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('email') }}">
+                                @error('email')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div>
+                                <label for="gst" class="block font-medium text-sm text-gray-700">GST Number</label> <input type="text" name="gst" id="gst" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('gst') }}">
+                                @error('gst')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div>
+                                <label for="pan" class="block font-medium text-sm text-gray-700">PAN Number</label> <input type="text" name="pan" id="pan" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('pan') }}">
+                                @error('pan')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label for="address" class="block font-medium text-sm text-gray-700">Address</label>
+                                <textarea name="address" id="address" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('address') }}</textarea>
+                                @error('address')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                            </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label for="email" class="form-label fw-semibold">Email</label>
-                            <input type="email" name="email" id="email" class="form-control form-control-lg rounded-pill" value="{{ old('email') }}" placeholder="e.g., customer@example.com">
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="phone" class="form-label fw-semibold">Phone</label>
-                            <input type="text" name="phone" id="phone" class="form-control form-control-lg rounded-pill" value="{{ old('phone') }}" placeholder="e.g., +91 9876543210">
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="address" class="form-label fw-semibold">Address</label>
-                            <textarea name="address" id="address" class="form-control rounded-3" rows="4" placeholder="Full address including city, state, zip">{{ old('address') }}</textarea>
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center mt-5">
-                            <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary btn-lg rounded-pill px-4">Cancel</a>
-                            <button type="submit" class="btn btn-teal-primary btn-lg rounded-pill px-5 shadow">
-                                <i class="bi bi-save me-2"></i> Save Customer
+                        <div class="mt-6 flex justify-end">
+                            <a href="{{ route('customers.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                                Cancel
+                            </a>
+                            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-3">
+                                Save Customer
                             </button>
                         </div>
                     </form>
@@ -53,5 +59,18 @@
             </div>
         </div>
     </div>
-</div>
-@endsection
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('customer-form');
+            const gstInput = document.getElementById('gst');
+            const panInput = document.getElementById('pan');
+
+            form.addEventListener('submit', function (event) {
+                if (gstInput.value.trim() === '' && panInput.value.trim() === '') {
+                    event.preventDefault(); // Stop form submission
+                    alert('Please provide either a GST Number or a PAN Number.');
+                }
+            });
+        });
+    </script>
+</x-app-layout>

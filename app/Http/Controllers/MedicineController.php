@@ -2,21 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Medicine;
 use App\Repositories\Interfaces\MedicineRepositoryInterface;
+use Illuminate\Http\Request;
 
 class MedicineController extends Controller
 {
-    protected $medicineRepo;
+    protected $medicineRepository;
 
-    public function __construct(MedicineRepositoryInterface $medicineRepo)
+    public function __construct(MedicineRepositoryInterface $medicineRepository)
     {
-        $this->medicineRepo = $medicineRepo;
+        $this->medicineRepository = $medicineRepository;
     }
 
     public function index()
     {
-        $medicines = $this->medicineRepo->allPaginated(10);
+        $medicines = $this->medicineRepository->all();
         return view('medicines.index', compact('medicines'));
     }
 
@@ -27,56 +28,49 @@ class MedicineController extends Controller
 
     public function store(Request $request)
     {
-        // Updated validation to match the new table schema
         $request->validate([
-            'name' => 'required|string|max:255',
-            'hsn_code' => 'required|string|max:20',
+            'name' => 'required|string|max:255|unique:medicines,name',
+            'unit' => 'required|string|max:50',
             'description' => 'nullable|string',
-            'unit' => 'required|string|max:50', // Added unit validation
+            'gst' => 'required|numeric|min:0', // Added
+            'pack_size' => 'required|string|max:100', // Added
+            'mfg_company_name' => 'required|string|max:255', // Added
         ]);
 
-        // Only pass fields that are in the medicines table
-        $this->medicineRepo->create($request->only(['name', 'hsn_code', 'description', 'unit']));
+        $this->medicineRepository->create($request->all());
 
-        return redirect()->route('medicines.index')->with('success', 'Medicine added successfully!');
+        return redirect()->route('medicines.index')->with('success', 'Medicine created successfully.');
     }
 
-    public function show($id)
+    public function show(Medicine $medicine)
     {
-        $medicine = $this->medicineRepo->find($id);
         return view('medicines.show', compact('medicine'));
     }
 
-    public function edit($id)
+    public function edit(Medicine $medicine)
     {
-        $medicine = $this->medicineRepo->find($id);
         return view('medicines.edit', compact('medicine'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Medicine $medicine)
     {
-        // Updated validation to match the new table schema
         $request->validate([
-            'name' => 'required|string|max:255',
-            'hsn_code' => 'required|string|max:20',
+            'name' => 'required|string|max:255|unique:medicines,name,' . $medicine->id,
+            'unit' => 'required|string|max:50',
             'description' => 'nullable|string',
-            'unit' => 'required|string|max:50', // Added unit validation
+            'gst' => 'required|numeric|min:0', // Added
+            'pack_size' => 'required|string|max:100', // Added
+            'mfg_company_name' => 'required|string|max:255', // Added
         ]);
 
-        // Only pass fields that are in the medicines table
-        $this->medicineRepo->update($id, $request->only(['name', 'hsn_code', 'description', 'unit']));
+        $this->medicineRepository->update($medicine->id, $request->all());
 
-        return redirect()->route('medicines.index')->with('success', 'Medicine updated successfully!');
+        return redirect()->route('medicines.index')->with('success', 'Medicine updated successfully.');
     }
 
-    public function destroy($id)
+    public function destroy(Medicine $medicine)
     {
-        try {
-            $this->medicineRepo->delete($id);
-            return redirect()->route('medicines.index')->with('success', 'Medicine deleted successfully!');
-        } catch (\Exception $e) {
-            \Log::error("Failed to delete medicine ID {$id}: " . $e->getMessage());
-            return redirect()->route('medicines.index')->with('error', 'Failed to delete medicine. It might be associated with other records!');
-        }
+        $this->medicineRepository->delete($medicine->id);
+        return redirect()->route('medicines.index')->with('success', 'Medicine deleted successfully.');
     }
 }

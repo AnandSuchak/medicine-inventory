@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Customer;
 use App\Repositories\Interfaces\CustomerRepositoryInterface;
+use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
@@ -17,7 +17,7 @@ class CustomerController extends Controller
 
     public function index()
     {
-        $customers = $this->customerRepository->allPaginated(10);
+        $customers = $this->customerRepository->all();
         return view('customers.index', compact('customers'));
     }
 
@@ -29,15 +29,22 @@ class CustomerController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:255',
-            'address' => 'nullable|string|max:255',
+            'shop_name' => 'required|string|max:255', // Updated
+            'phone' => 'required|string|max:15',
+            'email' => 'nullable|email|max:255|unique:customers,email',
+            'address' => 'nullable|string',
+            'gst' => 'nullable|string|max:15|required_without:pan', // Updated
+            'pan' => 'nullable|string|max:10|required_without:gst', // Updated
         ]);
 
-        $this->customerRepository->create($request->only(['name', 'phone', 'email', 'address']));
+        $this->customerRepository->create($request->all());
 
-        return redirect()->route('customers.index')->with('success', 'Customer created successfully!');
+        return redirect()->route('customers.index')->with('success', 'Customer created successfully.');
+    }
+
+    public function show(Customer $customer)
+    {
+        return view('customers.show', compact('customer'));
     }
 
     public function edit(Customer $customer)
@@ -48,35 +55,22 @@ class CustomerController extends Controller
     public function update(Request $request, Customer $customer)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:255',
-            'address' => 'nullable|string|max:255',
+            'shop_name' => 'required|string|max:255', // Updated
+            'phone' => 'required|string|max:15',
+            'email' => 'nullable|email|max:255|unique:customers,email,' . $customer->id,
+            'address' => 'nullable|string',
+            'gst' => 'nullable|string|max:15|required_without:pan', // Updated
+            'pan' => 'nullable|string|max:10|required_without:gst', // Updated
         ]);
 
-        $this->customerRepository->update($customer, $request->only(['name', 'phone', 'email', 'address']));
+        $this->customerRepository->update($customer->id, $request->all());
 
-        return redirect()->route('customers.index')->with('success', 'Customer updated successfully!');
+        return redirect()->route('customers.index')->with('success', 'Customer updated successfully.');
     }
 
-        public function show($id) // Changed from Customer $customer to $id
-    {
-        // Use your repository to find the customer by ID
-        $customer = $this->customerRepository->findById($id);
-
-        // If for some reason findById returns null, you might want to handle it (e.g., abort(404))
-        if (!$customer) {
-            abort(404, 'Customer not found.');
-        }
-
-        return view('customers.show', compact('customer'));
-    }
-
-    
     public function destroy(Customer $customer)
     {
-        $this->customerRepository->delete($customer);
-
-        return redirect()->route('customers.index')->with('success', 'Customer deleted successfully!');
+        $this->customerRepository->delete($customer->id);
+        return redirect()->route('customers.index')->with('success', 'Customer deleted successfully.');
     }
 }

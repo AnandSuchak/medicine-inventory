@@ -2,21 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Supplier;
+use App\Repositories\Interfaces\SupplierRepositoryInterface;
 use Illuminate\Http\Request;
-use App\Repositories\Interfaces\SupplierRepositoryInterface; // Make sure this is correctly namespaced
 
 class SupplierController extends Controller
 {
-    protected $supplierRepo;
+    protected $supplierRepository;
 
-    public function __construct(SupplierRepositoryInterface $supplierRepo)
+    public function __construct(SupplierRepositoryInterface $supplierRepository)
     {
-        $this->supplierRepo = $supplierRepo;
+        $this->supplierRepository = $supplierRepository;
     }
 
     public function index()
     {
-        $suppliers = $this->supplierRepo->allPaginated(10); // Or any number per page
+        $suppliers = $this->supplierRepository->all();
         return view('suppliers.index', compact('suppliers'));
     }
 
@@ -29,69 +30,47 @@ class SupplierController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:15',
-            'email' => 'nullable|email|max:255',
-            'address' => 'nullable|string',
-            'gstin' => 'nullable|string|max:15|unique:suppliers,gstin',
-            'drug_license_id' => 'nullable|string|max:50|unique:suppliers,drug_license_id', // Added validation for new field
+            'phone' => 'required|string|max:15',
+            'email' => 'nullable|email|max:255|unique:suppliers,email',
+            'address' => 'required|string',
+            'gstin' => 'nullable|string|max:15',
+            'drug_license' => 'nullable|string|max:255', // Updated
         ]);
 
-        $this->supplierRepo->create([
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'email' => $request->email,
-            'address' => $request->address,
-            'gstin' => $request->gstin,
-            'drug_license_id' => $request->drug_license_id, // Added new field to creation data
-        ]);
+        $this->supplierRepository->create($request->all());
 
         return redirect()->route('suppliers.index')->with('success', 'Supplier created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
+    public function show(Supplier $supplier)
     {
-        $supplier = $this->supplierRepo->find($id); // This uses findOrFail from your repository
         return view('suppliers.show', compact('supplier'));
     }
 
-    public function edit($id)
+    public function edit(Supplier $supplier)
     {
-        $supplier = $this->supplierRepo->find($id);
         return view('suppliers.edit', compact('supplier'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Supplier $supplier)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:15',
-            'email' => 'nullable|email|max:255',
-            'address' => 'nullable|string',
-            'gstin' => 'nullable|string|max:15|unique:suppliers,gstin,' . $id,
-            'drug_license_id' => 'nullable|string|max:50|unique:suppliers,drug_license_id,' . $id, // Added validation for new field
+            'phone' => 'required|string|max:15',
+            'email' => 'nullable|email|max:255|unique:suppliers,email,' . $supplier->id,
+            'address' => 'required|string',
+            'gstin' => 'nullable|string|max:15',
+            'drug_license' => 'nullable|string|max:255', // Updated
         ]);
 
-        $this->supplierRepo->update($id, [
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'email' => $request->email,
-            'address' => $request->address,
-            'gstin' => $request->gstin,
-            'drug_license_id' => $request->drug_license_id, // Added new field to update data
-        ]);
+        $this->supplierRepository->update($supplier->id, $request->all());
 
         return redirect()->route('suppliers.index')->with('success', 'Supplier updated successfully.');
     }
 
-    public function destroy($id)
+    public function destroy(Supplier $supplier)
     {
-        $this->supplierRepo->delete($id);
+        $this->supplierRepository->delete($supplier->id);
         return redirect()->route('suppliers.index')->with('success', 'Supplier deleted successfully.');
     }
 }

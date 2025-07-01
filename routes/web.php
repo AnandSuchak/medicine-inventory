@@ -1,45 +1,43 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\MedicineController;
 use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\PurchaseBillController;
 use App\Http\Controllers\BillController;
 use App\Http\Controllers\CompanyDetailController;
+use App\Http\Controllers\PurchaseBillController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
-
-// The root URL now directly loads the dashboard view.
+// Default welcome route
 Route::get('/', function () {
+    return view('welcome');
+});
+
+// Dashboard route
+Route::get('/dashboard', function () {
     return view('dashboard');
 })->name('dashboard');
 
 
-// All application routes are now public.
-// The 'auth' middleware group has been removed.
-
-// Resourceful Routes
+// All application routes
 Route::resource('suppliers', SupplierController::class);
 Route::resource('medicines', MedicineController::class);
 Route::resource('customers', CustomerController::class);
 Route::resource('bills', BillController::class);
-Route::resource('purchase_bills', PurchaseBillController::class);
+Route::resource('purchase-bills', PurchaseBillController::class); // <-- This line is now fixed
 
-// Company Details Route
-Route::get('company-details', [CompanyDetailController::class, 'edit'])->name('company_details.edit');
-Route::patch('company-details', [CompanyDetailController::class, 'update'])->name('company_details.update');
 
-// AJAX Search Routes
-Route::get('/search-medicines', [BillController::class, 'searchMedicines'])->name('search.medicines');
-Route::get('/search-customers', [BillController::class, 'searchCustomers'])->name('search.customers');
-Route::get('/purchase-bills/search-medicines', [PurchaseBillController::class, 'searchMedicines'])->name('purchase_bills.search_medicines');
+Route::get('company-details', [CompanyDetailController::class, 'edit'])->name('company-details.edit');
+Route::put('company-details', [CompanyDetailController::class, 'update'])->name('company-details.update');
+
+
+// Routes for user profile management (from Laravel Breeze)
+Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+
+// Authentication routes (from Laravel Breeze)
+// The line below is commented out because the auth.php file is missing.
+// require __DIR__.'/auth.php';

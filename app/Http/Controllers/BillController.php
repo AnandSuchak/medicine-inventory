@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bill;
 use App\Models\CompanyDetail;
 use App\Models\Customer;
 use App\Models\Medicine;
@@ -70,16 +71,20 @@ class BillController extends Controller
         abort(404);
     }
 
-    public function destroy($id)
-    {
-        try {
-            $this->billRepository->delete($id);
-            return redirect()->route('bills.index')->with('success', 'Bill deleted successfully and stock was returned.');
-        } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+        public function destroy(Bill $bill)
+        {
+            try {
+                $this->billRepository->delete($bill->id);
+                // Optional: Add a success message to the session
+                // return redirect()->route('bills.index')->with('success', 'Bill deleted successfully.');
+            } catch (\Exception $e) {
+                // Optional: Log the error and show an error message
+                // return redirect()->route('bills.index')->with('error', 'Failed to delete bill.');
+            }
+
+            return redirect()->route('bills.index');
         }
-    }
-    
+            
     // This search is for the medicine dropdown on the sales form.
     // It now includes the total available quantity.
     public function searchMedicines(Request $request)

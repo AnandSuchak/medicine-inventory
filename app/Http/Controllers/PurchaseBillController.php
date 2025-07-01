@@ -96,12 +96,18 @@ class PurchaseBillController extends Controller
 
         return redirect()->route('purchase_bills.index')->with('success', 'Purchase Bill updated successfully.');
     }
+    public function destroy(PurchaseBill $purchaseBill)
+{
+    try {
+        $this->purchaseBillRepository->delete($purchaseBill->id);
+        // Add a success message
+        return redirect()->route('purchase-bills.index')->with('success', 'Purchase Bill deleted successfully.');
 
-    public function destroy($id)
-    {
-        $this->purchaseBillRepository->delete($id);
-        return redirect()->route('purchase_bills.index')->with('success', 'Purchase Bill deleted successfully.');
+    } catch (\Exception $e) {
+        // If the repository throws an exception, catch it and show the error message
+        return redirect()->back()->with('error', $e->getMessage());
     }
+}
 
     public function searchMedicines(Request $request)
     {

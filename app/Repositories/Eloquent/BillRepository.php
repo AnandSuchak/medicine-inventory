@@ -145,20 +145,34 @@ class BillRepository implements BillRepositoryInterface
         });
     }
 
-    public function delete($id)
-    {
-        return DB::transaction(function () use ($id) {
-            $bill = $this->find($id);
 
-            // Return all stock from the bill items before deleting
-            foreach ($bill->billItems as $item) {
-                if ($item->medicineBatch) {
-                    $item->medicineBatch->increment('quantity', $item->quantity);
-                }
+public function delete($id)
+{
+    return DB::transaction(function () use ($id) {
+        // Use with('billItems') to ensure the relationship is loaded
+        $bill = Bill::with('billItems')->find($id);
+
+        if (!$bill) {
+            throw new \Exception("Bill not found.");
+        }
+
+        // Iterate over each item in the bill to restore stock
+        foreach ($bill->billItems as $item) {
+            // Find the batch the item was sold from
+            // CORRECTED: from $item->batch_id to $item->medicine_batch_id
+            $batch = MedicineBatch::find($item->medicine_batch_id);
+
+            if ($batch) {
+                // Add the quantity back to the batch
+                $batch->increment('quantity', $item->quantity);
             }
+        }
 
-            // Delete the bill, which will cascade delete the bill items
-            return $bill->delete();
-        });
-    }
+        // Soft delete all associated bill items
+        $bill->billItems()->delete();
+
+        // Soft delete the bill itself and return the result
+        return $bill->delete();
+    });
+}
 }

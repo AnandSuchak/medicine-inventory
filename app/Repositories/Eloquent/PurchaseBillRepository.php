@@ -98,24 +98,34 @@ class PurchaseBillRepository implements PurchaseBillRepositoryInterface
         });
     }
 
-    public function delete($id)
-    {
-        return DB::transaction(function () use ($id) {
-            $purchaseBill = $this->find($id);
+   public function delete($id)
+{
+    return DB::transaction(function () use ($id) {
+        $purchaseBill = PurchaseBill::with('purchaseBillMedicines')->findOrFail($id);
 
-            // "Return" the stock before deleting
-            foreach ($purchaseBill->medicines as $medicine) {
-                 $medicineBatch = MedicineBatch::where('medicine_id', $medicine->id)
-                    ->where('batch_no', $medicine->pivot->batch_no)
-                    ->first();
-                
-                if ($medicineBatch) {
-                    $medicineBatch->decrement('quantity', $medicine->pivot->quantity);
-                }
+        // Check if any stock from this purchase has been sold
+        foreach ($purchaseBill->purchaseBillMedicines as $item) {
+            // Find the corresponding medicine batch
+            $batch = MedicineBatch::where('purchase_bill_medicine_id', $item->id)->first();
+
+            // If a batch exists and its quantity is less than the purchased quantity, it means some has been sold.
+            if ($batch && $batch->quantity < $item->quantity) {
+                $medicineName = $item->medicine->name;
+                throw new \Exception("Cannot delete: Stock from this purchase for medicine '{$medicineName}' has already been sold.");
             }
+        }
 
-            $purchaseBill->medicines()->detach();
-            return $purchaseBill->delete();
-        });
-    }
+        // If we get here, no stock has been sold. It's safe to delete.
+
+        // 1. Delete the MedicineBatch records associated with this purchase
+        $itemIds = $purchaseBill->purchaseBillMedicines->pluck('id');
+        MedicineBatch::whereIn('purchase_bill_medicine_id', $itemIds)->delete();
+
+        // 2. Soft delete the purchase bill items
+        $purchaseBill->purchaseBillMedicines()->delete();
+
+        // 3. Soft delete the main purchase bill
+        return $purchaseBill->delete();
+    });
+}
 }

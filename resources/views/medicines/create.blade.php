@@ -1,53 +1,59 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <h2 class="mb-4 text-center">Add New Medicine</h2>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <h2 class="mb-4 text-center text-teal fw-bold">Add New Medicine</h2>
 
-    @if($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+            @if($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show shadow-sm rounded-3" role="alert">
+                    <ul class="mb-0 ps-3">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <form action="{{ route('medicines.store') }}" method="POST">
+                        @csrf
+
+                        <div class="mb-4">
+                            <label for="name" class="form-label fw-semibold">Medicine Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" id="name" class="form-control form-control-lg rounded-pill" value="{{ old('name') }}" placeholder="e.g., Paracetamol, Amoxicillin" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="hsn_code" class="form-label fw-semibold">HSN Code <span class="text-danger">*</span></label>
+                            <input type="text" name="hsn_code" id="hsn_code" class="form-control form-control-lg rounded-pill" value="{{ old('hsn_code') }}" placeholder="e.g., 3004.90.11" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="description" class="form-label fw-semibold">Description</label>
+                            <textarea name="description" id="description" class="form-control rounded-3" rows="3" placeholder="Brief description or usage instructions">{{ old('description') }}</textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="unit" class="form-label fw-semibold">Unit <span class="text-danger">*</span></label> {{-- Changed from Price --}}
+                            <input type="text" name="unit" id="unit" class="form-control form-control-lg rounded-pill" value="{{ old('unit') }}" placeholder="e.g., Tablet, Bottle, Box" required>
+                        </div>
+
+                        {{-- Removed the 'quantity' field as it's not directly on the medicines table --}}
+
+                        <div class="d-flex justify-content-between align-items-center mt-5">
+                            <a href="{{ route('medicines.index') }}" class="btn btn-outline-secondary btn-lg rounded-pill px-4">Cancel</a>
+                            <button type="submit" class="btn btn-teal-primary btn-lg rounded-pill px-5 shadow">
+                                <i class="bi bi-save me-2"></i> Save Medicine
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-    @endif
-
-    <form action="{{ route('medicines.store') }}" method="POST" autocomplete="off">
-        @csrf
-
-        <div class="card shadow-sm p-4">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="name" class="form-label">Medicine Name</label>
-                    <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required placeholder="Enter medicine name">
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label for="hsn_code" class="form-label">HSN Code</label>
-                    <input type="text" name="hsn_code" id="hsn_code" class="form-control" value="{{ old('hsn_code') }}" required placeholder="Enter HSN code">
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label for="description" class="form-label">Description (Optional)</label>
-                <textarea name="description" id="description" class="form-control" rows="3" placeholder="Enter description">{{ old('description') }}</textarea>
-            </div>
-
-            <div class="row">
-
-                <div class="col-md-6 mb-3">
-                    <label for="quantity" class="form-label">Quantity</label>
-                    <input type="number" name="quantity" id="quantity" class="form-control" value="{{ old('quantity') }}" min="0" required placeholder="e.g. 100">
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-between mt-4">
-                <a href="{{ route('medicines.index') }}" class="btn btn-secondary">Cancel</a>
-                <button type="submit" class="btn" style="background-color: #00838f; color: white;">Save Medicine</button>
-            </div>
-        </div>
-    </form>
+    </div>
 </div>
 @endsection

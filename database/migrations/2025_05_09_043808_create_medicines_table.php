@@ -16,8 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('hsn_code'); // Added HSN code
             $table->text('description')->nullable();
-            $table->decimal('price', 8, 2);
-            $table->integer('quantity');
+                        $table->string('unit')->nullable(); // e.g., 'Pcs', 'Bottle', 'Strip'
             $table->timestamps();
         });
         

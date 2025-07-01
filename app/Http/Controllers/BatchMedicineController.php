@@ -5,87 +5,119 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Batch;
 use App\Models\Medicine;
+use App\Repositories\Interfaces\BatchMedicineRepositoryInterface; // Ensure this interface exists
 
 class BatchMedicineController extends Controller
 {
-    // Show form to add medicines to a specific batch
+    protected $batchMedicineRepo;
+
+    public function __construct(BatchMedicineRepositoryInterface $batchMedicineRepo)
+    {
+        $this->batchMedicineRepo = $batchMedicineRepo;
+    }
+
+    /**
+     * Show the form for adding medicines to a specific batch.
+     *
+     * @param int $batchId
+     * @return \Illuminate\View\View
+     */
     public function create($batchId)
     {
         $batch = Batch::findOrFail($batchId);
-        $medicines = Medicine::all(); // List of all medicines to add to batch
+        // Fetch all medicines to populate the dropdowns for adding new entries
+        $medicines = Medicine::orderBy('name')->get(); 
 
         return view('batch_medicines.create', compact('batch', 'medicines'));
     }
 
-    // Store medicines attached to a batch
+    /**
+     * Store newly added medicines for a specific batch.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $batchId
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function store(Request $request, $batchId)
     {
-        $batch = Batch::findOrFail($batchId);
-
         $request->validate([
             'medicines' => 'required|array|min:1',
             'medicines.*.medicine_id' => 'required|exists:medicines,id',
             'medicines.*.quantity' => 'required|integer|min:1',
             'medicines.*.price' => 'required|numeric|min:0',
             'medicines.*.ptr' => 'required|numeric|min:0',
-            'medicines.*.expiry_date' => 'required|date',
+            'medicines.*.gst_percent' => 'required|numeric|min:0|max:100',
+            'medicines.*.expiry_date' => 'required|date|after_or_equal:today',
         ]);
 
-        foreach ($request->medicines as $medicineData) {
-            // Attach or update pivot for each medicine in batch
-            $batch->medicines()->syncWithoutDetaching([
-                $medicineData['medicine_id'] => [
-                    'quantity' => $medicineData['quantity'],
-                    'price' => $medicineData['price'],
-                    'ptr' => $medicineData['ptr'],
-                    'expiry_date' => $medicineData['expiry_date'],
-                ]
-            ]);
-        }
+        $this->batchMedicineRepo->attachMedicinesToBatch($batchId, $request->medicines);
 
         return redirect()->route('batches.show', $batchId)
-                         ->with('success', 'Medicines added/updated successfully!');
+                         ->with('success', 'Medicines added/updated successfully to batch!');
     }
 
-    // Show form to edit medicines in a batch
+    /**
+     * Show the form for editing medicines in a specific batch.
+     *
+     * @param int $batchId
+     * @return \Illuminate\View\View
+     */
     public function edit($batchId)
     {
-        $batch = Batch::with('medicines')->findOrFail($batchId);
-        $medicines = $batch->medicines;
+        // Eager load the 'medicines' relationship on the Batch model
+        // NO 'medicines.medicine' here - that would cause the error!
+        $batch = Batch::with(['medicines' => function($query) {
+            $query->orderBy('name'); // Optional: order medicines by name
+        }])->findOrFail($batchId);
 
-        return view('batch_medicines.edit', compact('batch', 'medicines'));
+        // Fetch all medicines to populate the dropdown for adding *new* entries in the edit form
+        $allMedicines = Medicine::orderBy('name')->get(); 
+
+        return view('batch_medicines.edit', compact('batch', 'allMedicines'));
     }
 
-    // Update medicines in batch
+    /**
+     * Update existing medicines for a specific batch.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $batchId
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function update(Request $request, $batchId)
     {
-        $batch = Batch::findOrFail($batchId);
-
         $request->validate([
             'medicines' => 'required|array|min:1',
             'medicines.*.medicine_id' => 'required|exists:medicines,id',
-            'medicines.*.quantity' => 'required|integer|min:0',
+            'medicines.*.quantity' => 'required|integer|min:0', // Can be 0 if you allow reducing to 0
             'medicines.*.price' => 'required|numeric|min:0',
             'medicines.*.ptr' => 'required|numeric|min:0',
+            'medicines.*.gst_percent' => 'required|numeric|min:0|max:100',
+            'medicines.*.expiry_date' => 'required|date|after_or_equal:today',
         ]);
 
-        foreach ($request->medicines as $medicineData) {
-            $batch->medicines()->updateExistingPivot($medicineData['medicine_id'], [
-                'quantity' => $medicineData['quantity'],
-                'price' => $medicineData['price'],
-                'ptr' => $medicineData['ptr'],
-            ]);
-        }
+        $this->batchMedicineRepo->updateMedicinesInBatch($batchId, $request->medicines);
 
-        return redirect()->route('batches.show', $batchId)->with('success', 'Batch medicines updated successfully.');
+        return redirect()->route('batches.show', $batchId)
+                         ->with('success', 'Batch medicines updated successfully.');
     }
 
-    // Remove medicine from batch
+    /**
+     * Remove a specific medicine from a batch.
+     *
+     * @param int $batchId
+     * @param int $medicineId
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function remove($batchId, $medicineId)
     {
-        $batch = Batch::findOrFail($batchId);
-        $batch->medicines()->detach($medicineId);
-
-        return redirect()->route('batch_medicines.edit', $batchId)->with('success', 'Medicine removed successfully!');
+        try {
+            $this->batchMedicineRepo->removeMedicineFromBatch($batchId, $medicineId);
+            return redirect()->route('batches.show', $batchId)
+                             ->with('success', 'Medicine removed from batch successfully!');
+        } catch (\Exception $e) {
+            \Log::error("Failed to remove medicine ID {$medicineId} from batch {$batchId}: " . $e->getMessage());
+            return redirect()->route('batches.show', $batchId)
+                             ->with('error', 'Failed to remove medicine from batch!');
+        }
     }
 }

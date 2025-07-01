@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('suppliers', function (Blueprint $table) {
+               Schema::create('suppliers', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // Name of the supplier
-            $table->string('contact_number')->nullable(); // Contact number of the supplier
-            $table->string('email')->nullable(); // Email address
-            $table->text('address')->nullable(); // Address of the supplier
-            $table->enum('status', ['active', 'inactive'])->default('active'); // Active or Inactive status
-            $table->timestamps(); // Created at and updated at timestamps
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->string('phone')->nullable(); // Phone number, optional
+            $table->text('address')->nullable(); // Supplier address, optional
+            $table->string('gstin', 15)->nullable(); // GSTIN, optional
+            $table->timestamps();
         });
     }
     

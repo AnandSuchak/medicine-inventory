@@ -1,204 +1,202 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container my-4 p-4 batch-medicine-container shadow-sm rounded bg-light">
-    <h2 class="mb-4 text-teal fw-bold">Add Medicines to Batch: {{ $batch->batch_number }}</h2>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-11">
+            <h2 class="mb-4 text-center text-teal fw-bold">Add Medicines to Batch: {{ $batch->batch_number }}</h2>
 
-    @if(session('success'))
-        <div class="alert alert-success rounded-pill">{{ session('success') }}</div>
-    @endif
+            @if($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show shadow-sm rounded-3" role="alert">
+                    <ul class="mb-0 ps-3">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
 
-    @if($errors->any())
-        <div class="alert alert-danger rounded-pill">
-            <ul class="mb-0 ps-3">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <form action="{{ route('batches.medicines.store', $batch->id) }}" method="POST">
+                        @csrf
+
+                        <div class="table-responsive mb-4">
+                            <table class="table table-hover table-striped align-middle mb-0">
+                                <thead class="bg-teal text-white rounded-top-4">
+                                    <tr>
+                                        <th scope="col" class="py-3 ps-4 rounded-top-start-4">S.No.</th>
+                                        <th scope="col" class="py-3">Medicine</th>
+                                        <th scope="col" class="py-3">Qty</th>
+                                        <th scope="col" class="py-3">Pur. Price</th>
+                                        <th scope="col" class="py-3">PTR</th>
+                                        <th scope="col" class="py-3">GST (%)</th>
+                                        <th scope="col" class="py-3">Expiry Date</th>
+                                        <th scope="col" class="py-3 text-center rounded-top-end-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="medicine-entries-container">
+                                    {{-- Initial medicine entry row --}}
+                                    <tr class="medicine-entry-row border-bottom">
+                                        <td class="ps-4 py-3 text-center entry-index">1.</td>
+                                        <td>
+                                            {{-- Add 'medicine-select' class here --}}
+                                            <select name="medicines[0][medicine_id]" id="medicine_id_0" class="form-select medicine-select" required>
+                                                <option value="">Select Medicine</option>
+                                                @foreach($medicines as $medicine)
+                                                    <option value="{{ $medicine->id }}" {{ old('medicines.0.medicine_id') == $medicine->id ? 'selected' : '' }}>
+                                                        {{ $medicine->name }} ({{ $medicine->unit }})
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="number" name="medicines[0][quantity]" id="quantity_0" class="form-control" value="{{ old('medicines.0.quantity') }}" placeholder="Quantity" min="1" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.01" name="medicines[0][price]" id="price_0" class="form-control" value="{{ old('medicines.0.price') }}" placeholder="Purchase Price" min="0" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.01" name="medicines[0][ptr]" id="ptr_0" class="form-control" value="{{ old('medicines.0.ptr') }}" placeholder="PTR" min="0" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.01" name="medicines[0][gst_percent]" id="gst_percent_0" class="form-control" value="{{ old('medicines.0.gst_percent') }}" placeholder="GST %" min="0" max="100" required>
+                                        </td>
+                                        <td>
+                                            <input type="date" name="medicines[0][expiry_date]" id="expiry_date_0" class="form-control" value="{{ old('medicines.0.expiry_date') }}" required>
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-outline-danger remove-medicine-entry" style="display:none;">Remove</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="d-grid gap-2 mb-4">
+                            <button type="button" id="add-medicine-entry" class="btn btn-outline-teal-primary btn-lg rounded-pill">
+                                <i class="bi bi-plus-circle me-2"></i> Add Another Medicine
+                            </button>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-5">
+                            <a href="{{ route('batches.show', $batch->id) }}" class="btn btn-outline-secondary btn-lg rounded-pill px-4">Cancel</a>
+                            <button type="submit" class="btn btn-teal-primary btn-lg rounded-pill px-5 shadow">
+                                <i class="bi bi-save me-2"></i> Save Medicines
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-    @endif
-
-    <form action="{{ route('batches.medicines.store', $batch->id) }}" method="POST" class="needs-validation" novalidate>
-        @csrf
-
-        <table class="table table-bordered align-middle bg-white">
-            <thead class="table-teal text-white">
-                <tr>
-                    <th>Medicine</th>
-                    <th>Quantity</th>
-                    <th>Price</th>
-                    <th>PTR</th>
-                    <th>Expiry Date</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="medicine-rows">
-                <tr>
-                    <td>
-                        <select name="medicines[0][medicine_id]" class="form-select" required>
-                            <option value="">-- Select Medicine --</option>
-                            @foreach($medicines as $medicine)
-                                <option value="{{ $medicine->id }}">{{ $medicine->name }}</option>
-                            @endforeach
-                        </select>
-                        <div class="invalid-feedback">Please select a medicine.</div>
-                    </td>
-                    <td>
-                        <input type="number" name="medicines[0][quantity]" class="form-control" min="1" required>
-                        <div class="invalid-feedback">Quantity must be at least 1.</div>
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" name="medicines[0][price]" class="form-control" min="0" required>
-                        <div class="invalid-feedback">Please enter a valid price.</div>
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" name="medicines[0][ptr]" class="form-control" min="0" required>
-                        <div class="invalid-feedback">Please enter a valid PTR.</div>
-                    </td>
-                    <td>
-                        <input type="date" name="medicines[0][expiry_date]" class="form-control" required>
-                        <div class="invalid-feedback">Please select an expiry date.</div>
-                    </td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-danger remove-row" aria-label="Remove row">&times;</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-
-        <button type="button" id="add-row" class="btn btn-secondary mb-3">+ Add Medicine</button>
-
-        <div class="d-flex justify-content-between">
-            <a href="{{ route('batches.index') }}" class="btn btn-outline-secondary">Back</a>
-            <button type="submit" class="btn btn-teal fw-semibold">Save Medicines</button>
-        </div>
-    </form>
+    </div>
 </div>
 
-<style>
-    /* Teal theme colors */
-    .text-teal {
-        color: #00838f !important;
-    }
-    .btn-teal {
-        background-color: #00838f;
-        color: white;
-        border: none;
-        transition: background-color 0.3s ease;
-    }
-    .btn-teal:hover,
-    .btn-teal:focus {
-        background-color: #006064;
-        color: white;
-    }
-
-    .table-teal {
-        background-color: #00838f;
-    }
-
-    /* Container styling */
-    .batch-medicine-container {
-        background: #f9fdfd;
-        border: 1px solid #c9dcdc;
-    }
-
-    /* Buttons */
-    .btn-secondary {
-        background-color: #607d8b;
-        border-color: #546e7a;
-        color: white;
-        transition: background-color 0.3s ease;
-    }
-    .btn-secondary:hover,
-    .btn-secondary:focus {
-        background-color: #455a64;
-        border-color: #37474f;
-        color: white;
-    }
-
-    /* Table */
-    table.table {
-        box-shadow: 0 2px 6px rgb(0 131 143 / 0.2);
-    }
-
-    /* Form inputs focus */
-    .form-select:focus,
-    .form-control:focus {
-        border-color: #00838f;
-        box-shadow: 0 0 5px #00838f80;
-        outline: none;
-    }
-
-    /* Remove button */
-    .remove-row {
-        padding: 0.3rem 0.6rem;
-        font-weight: bold;
-        font-size: 1.25rem;
-        line-height: 1;
-    }
-</style>
-
+@push('scripts') {{-- Start of page-specific scripts block --}}
 <script>
-    // Add new row with incremented index for array inputs
-    let rowIdx = 1;
-    document.getElementById('add-row').addEventListener('click', function() {
-        const medicines = @json($medicines);
-        const options = medicines.map(med => `<option value="${med.id}">${med.name}</option>`).join('');
+$(document).ready(function() {
+    const container = $('#medicine-entries-container');
+    const addButton = $('#add-medicine-entry');
+    let entryIndex = container.children('.medicine-entry-row').length;
 
-        const newRow = `
-            <tr>
-                <td>
-                    <select name="medicines[${rowIdx}][medicine_id]" class="form-select" required>
-                        <option value="">-- Select Medicine --</option>
-                        ${options}
-                    </select>
-                    <div class="invalid-feedback">Please select a medicine.</div>
-                </td>
-                <td>
-                    <input type="number" name="medicines[${rowIdx}][quantity]" class="form-control" min="1" required>
-                    <div class="invalid-feedback">Quantity must be at least 1.</div>
-                </td>
-                <td>
-                    <input type="number" step="0.01" name="medicines[${rowIdx}][price]" class="form-control" min="0" required>
-                    <div class="invalid-feedback">Please enter a valid price.</div>
-                </td>
-                <td>
-                    <input type="number" step="0.01" name="medicines[${rowIdx}][ptr]" class="form-control" min="0" required>
-                    <div class="invalid-feedback">Please enter a valid PTR.</div>
-                </td>
-                <td>
-                    <input type="date" name="medicines[${rowIdx}][expiry_date]" class="form-control" required>
-                    <div class="invalid-feedback">Please select an expiry date.</div>
-                </td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-danger remove-row" aria-label="Remove row">&times;</button>
-                </td>
-            </tr>
-        `;
-        document.getElementById('medicine-rows').insertAdjacentHTML('beforeend', newRow);
-        rowIdx++;
+    // Initialize Select2 on existing/first medicine select
+    function initializeSelect2(element) {
+        element.select2({
+            theme: 'bootstrap-5', // Use the Bootstrap 5 theme for better integration
+            placeholder: 'Search for medicine...',
+            allowClear: true,
+            width: 'style' // Set width to the element's style
+        });
+    }
+
+    // Initialize Select2 for the first row on page load
+    initializeSelect2($('#medicine_id_0'));
+
+    // Template for a new medicine entry row
+    const newEntryTemplate = `
+        <tr class="medicine-entry-row border-bottom">
+            <td class="ps-4 py-3 text-center entry-index"></td>
+            <td>
+                <select name="medicines[TEMP_INDEX][medicine_id]" id="medicine_id_TEMP" class="form-select medicine-select" required>
+                    <option value="">Select Medicine</option>
+                    @foreach($medicines as $medicine)
+                        <option value="{{ $medicine->id }}">{{ $medicine->name }} ({{ $medicine->unit }})</option>
+                    @endforeach
+                </select>
+            </td>
+            <td>
+                <input type="number" name="medicines[TEMP_INDEX][quantity]" id="quantity_TEMP" class="form-control" value="" placeholder="Quantity" min="1" required>
+            </td>
+            <td>
+                <input type="number" step="0.01" name="medicines[TEMP_INDEX][price]" id="price_TEMP" class="form-control" value="" placeholder="Purchase Price" min="0" required>
+            </td>
+            <td>
+                <input type="number" step="0.01" name="medicines[TEMP_INDEX][ptr]" id="ptr_TEMP" class="form-control" value="" placeholder="PTR" min="0" required>
+            </td>
+            <td>
+                <input type="number" step="0.01" name="medicines[TEMP_INDEX][gst_percent]" id="gst_percent_TEMP" class="form-control" value="" placeholder="GST %" min="0" max="100" required>
+            </td>
+            <td>
+                <input type="date" name="medicines[TEMP_INDEX][expiry_date]" id="expiry_date_TEMP" class="form-control" value="" required>
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger remove-medicine-entry">Remove</button>
+            </td>
+        </tr>
+    `;
+
+    function updateRemoveButtons() {
+        const removeButtons = container.find('.remove-medicine-entry');
+        if (removeButtons.length > 1) {
+            removeButtons.show();
+        } else {
+            removeButtons.hide();
+        }
+    }
+
+    function updateEntryIndices() {
+        container.children('.medicine-entry-row').each(function(i, row) {
+            $(row).find('.entry-index').text((i + 1) + '.'); // Update S.No.
+            $(row).find('[name^="medicines["]').each(function() {
+                const name = $(this).attr('name');
+                $(this).attr('name', name.replace(/medicines\[\d+\]/, `medicines[${i}]`));
+                const id = $(this).attr('id');
+                if (id) {
+                    $(this).attr('id', id.replace(/_\d+|TEMP/, `_${i}`));
+                }
+            });
+        });
+    }
+
+    addButton.on('click', function() {
+        const newEntryHtml = newEntryTemplate.replace(/TEMP_INDEX/g, entryIndex).replace(/_TEMP/g, '_' + entryIndex);
+        const newRow = $(newEntryHtml); // Create jQuery object from HTML string
+
+        container.append(newRow);
+        
+        // IMPORTANT: Initialize Select2 on the new select element after it's added to the DOM
+        initializeSelect2(newRow.find('.medicine-select'));
+
+        entryIndex++;
+        updateRemoveButtons();
+        updateEntryIndices();
     });
 
-    // Remove row on click
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('remove-row')) {
-            e.target.closest('tr').remove();
+    container.on('click', '.remove-medicine-entry', function() {
+        if (container.children('.medicine-entry-row').length > 1) { // Prevent removing the last row
+            // Destroy Select2 instance before removing the element to prevent memory leaks
+            $(this).closest('.medicine-entry-row').find('.medicine-select').select2('destroy');
+            
+            $(this).closest('.medicine-entry-row').remove();
+            updateEntryIndices();
+            updateRemoveButtons();
+        } else {
+            alert('You cannot remove the last medicine entry. Please add at least one medicine to the batch.');
         }
     });
 
-    // Bootstrap validation
-    (function () {
-        'use strict'
-        const forms = document.querySelectorAll('.needs-validation')
-        Array.from(forms).forEach(form => {
-            form.addEventListener('submit', event => {
-                if (!form.checkValidity()) {
-                    event.preventDefault()
-                    event.stopPropagation()
-                }
-                form.classList.add('was-validated')
-            }, false)
-        })
-    })()
+    updateRemoveButtons(); // Initial call to set visibility of remove buttons
+});
 </script>
-@endsection
+@endpush {{-- End of page-specific scripts block --}}

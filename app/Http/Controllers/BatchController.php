@@ -2,84 +2,114 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Batch;
-use App\Models\Supplier;
-use App\Models\Medicine;
 use Illuminate\Http\Request;
+use App\Repositories\Interfaces\BatchRepositoryInterface;
+use App\Repositories\Interfaces\SupplierRepositoryInterface; // Import SupplierRepositoryInterface
+use Illuminate\Validation\Rule; // Import Rule for validation
+use App\Models\Supplier;
+use App\Models\Batch;
 
 class BatchController extends Controller
 {
-    /**
-     * Display a list of all batches.
-     */
+    protected $batchRepo;
+    protected $supplierRepo; // Declare supplier repository
+
+    public function __construct(
+        BatchRepositoryInterface $batchRepo,
+        SupplierRepositoryInterface $supplierRepo // Inject SupplierRepository
+    ) {
+        $this->batchRepo = $batchRepo;
+        $this->supplierRepo = $supplierRepo;
+    }
+
     public function index()
     {
-        $batches = Batch::with('supplier')->withCount('medicines')->latest()->get();
+        // Using the allWithSupplierAndMedicineCount method from the repository
+        $batches = $this->batchRepo->allWithSupplierAndMedicineCount();
         return view('batches.index', compact('batches'));
     }
 
-    /**
-     * Show the form to create a new batch.
-     */
     public function create()
     {
-        $suppliers = Supplier::all();
+        $suppliers = $this->supplierRepo->all(); // Fetch all suppliers for the dropdown
         return view('batches.create', compact('suppliers'));
     }
 
-    /**
-     * Store a newly created batch and redirect to medicine add form.
-     */
     public function store(Request $request)
     {
+        // Validate inputs excluding batch_number as it's auto-generated
         $validated = $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
+            'purchase_date' => 'required|date',
+            'status' => 'required|in:active,inactive,completed',
         ]);
 
+        // --- Batch Number Generation Logic (copied from your snippet) ---
         $supplier = Supplier::findOrFail($validated['supplier_id']);
         $supplierPrefix = strtoupper(substr($supplier->name, 0, 2));
-        $date = date('d');
-        $month = date('m');
+        $date = now()->format('d'); // Use Carbon's now() for current date
+        $month = now()->format('m'); // Use Carbon's now() for current month
         $batchPrefix = $supplierPrefix . $date . $month;
 
+        // Count batches created today to get the sequential number
+        // Ensure you count only batches created on the same day for the sequential part
         $batchCount = Batch::whereDate('created_at', now()->toDateString())->count();
         $batchNumber = $batchPrefix . str_pad($batchCount + 1, 2, '0', STR_PAD_LEFT);
+        // --- End Batch Number Generation Logic ---
 
         $batch = Batch::create([
-            'batch_number' => $batchNumber,
-            'supplier_id' => $supplier->id,
-            'status' => 'Active',
+            'batch_number' => $batchNumber, // Assign the generated batch number
+            'supplier_id' => $validated['supplier_id'],
+            'purchase_date' => $validated['purchase_date'],
+            'status' => $validated['status'],
         ]);
 
-        return redirect()
-            ->route('batches.medicines.create', ['batch' => $batch->id])
-            ->with('success', 'Batch created successfully! Now add medicines to this batch.');
+        return redirect()->route('batches.show', $batch->id)
+                         ->with('success', 'Batch created successfully with number: ' . $batch->batch_number);
     }
 
-
-        // BatchController.php
-public function getByMedicine($medicineId)
-{
-    $batches = Batch::where('medicine_id', $medicineId)->get();
-
-    return response()->json($batches);
-}
-
-    /**
-     * Show a single batch with its medicines.
-     */
-    public function show(Batch $batch)
+    public function show($id)
     {
-        $batch->load(['supplier', 'medicines']);
+        // The find method in BatchRepository eager loads supplier and medicines
+        $batch = $this->batchRepo->find($id);
         return view('batches.show', compact('batch'));
     }
 
-    /**
-     * Delete a batch.
-     */
-    public function destroy(Batch $batch)
+    public function edit($id)
     {
-        $batch->delete();
-        return back()->with('success', 'Batch deleted successfully.');
+        $batch = $this->batchRepo->find($id);
+        $suppliers = $this->supplierRepo->all(); // Fetch all suppliers for the dropdown
+        return view('batches.edit', compact('batch', 'suppliers'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'batch_number' => 'required|string|max:255|unique:batches,batch_number,' . $id,
+            'supplier_id' => 'required|exists:suppliers,id',
+            'status' => ['required', Rule::in(['active', 'inactive', 'completed'])],
+            'purchase_date' => 'required|date|before_or_equal:today',
+        ]);
+
+        $this->batchRepo->update($id, $request->only([
+            'batch_number',
+            'supplier_id',
+            'status',
+            'purchase_date',
+        ]));
+
+        return redirect()->route('batches.index')->with('success', 'Batch updated successfully!');
+    }
+
+    public function destroy($id)
+    {
+        $batch = $this->batchRepo->find($id); // Find the batch before deleting
+        try {
+            $this->batchRepo->delete($batch);
+            return redirect()->route('batches.index')->with('success', 'Batch deleted successfully!');
+        } catch (\Exception $e) {
+        
+            return redirect()->route('batches.index')->with('error', 'Failed to delete batch. It might be associated with other records!');
+        }
     }
 }

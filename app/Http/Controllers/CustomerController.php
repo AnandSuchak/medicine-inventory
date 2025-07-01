@@ -2,25 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Customer;
 use Illuminate\Http\Request;
+use App\Models\Customer;
+use App\Repositories\Interfaces\CustomerRepositoryInterface;
 
 class CustomerController extends Controller
 {
-    // Show a list of all customers (with pagination)
+    protected $customerRepository;
+
+    public function __construct(CustomerRepositoryInterface $customerRepository)
+    {
+        $this->customerRepository = $customerRepository;
+    }
+
     public function index()
     {
-        $customers = Customer::paginate(10); // Paginate customers
+        $customers = $this->customerRepository->allPaginated(10);
         return view('customers.index', compact('customers'));
     }
 
-    // Show the form for creating a new customer
     public function create()
     {
         return view('customers.create');
     }
 
-    // Store a newly created customer in the database
     public function store(Request $request)
     {
         $request->validate([
@@ -30,46 +35,48 @@ class CustomerController extends Controller
             'address' => 'nullable|string|max:255',
         ]);
 
-        Customer::create([
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'email' => $request->email,
-            'address' => $request->address,
-        ]);
+        $this->customerRepository->create($request->only(['name', 'phone', 'email', 'address']));
 
         return redirect()->route('customers.index')->with('success', 'Customer created successfully!');
     }
 
-    // Show the form for editing a customer
     public function edit(Customer $customer)
     {
         return view('customers.edit', compact('customer'));
     }
 
-    // Update the specified customer in the database
     public function update(Request $request, Customer $customer)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20', // You can adjust max length based on phone format
+            'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:255',
         ]);
 
-        $customer->update([
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'email' => $request->email,
-            'address' => $request->address,
-        ]);
+        $this->customerRepository->update($customer, $request->only(['name', 'phone', 'email', 'address']));
 
         return redirect()->route('customers.index')->with('success', 'Customer updated successfully!');
     }
 
-    // Remove the specified customer from the database
+        public function show($id) // Changed from Customer $customer to $id
+    {
+        // Use your repository to find the customer by ID
+        $customer = $this->customerRepository->findById($id);
+
+        // If for some reason findById returns null, you might want to handle it (e.g., abort(404))
+        if (!$customer) {
+            abort(404, 'Customer not found.');
+        }
+
+        return view('customers.show', compact('customer'));
+    }
+
+    
     public function destroy(Customer $customer)
     {
-        $customer->delete();
+        $this->customerRepository->delete($customer);
+
         return redirect()->route('customers.index')->with('success', 'Customer deleted successfully!');
     }
 }

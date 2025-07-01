@@ -1,108 +1,63 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <h2 class="mb-4 text-center">Edit Supplier</h2>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <h2 class="mb-4 text-center text-teal fw-bold">Edit Supplier</h2>
 
-    @if($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+            @if($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show shadow-sm rounded-3" role="alert">
+                    <ul class="mb-0 ps-3">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <form action="{{ route('suppliers.update', $supplier->id) }}" method="POST">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="mb-4">
+                            <label for="name" class="form-label fw-semibold">Supplier Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" id="name" class="form-control form-control-lg rounded-pill" value="{{ old('name', $supplier->name) }}" placeholder="Enter supplier's full name" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="email" class="form-label fw-semibold">Email</label>
+                            <input type="email" name="email" id="email" class="form-control form-control-lg rounded-pill" value="{{ old('email', $supplier->email) }}" placeholder="e.g., info@supplier.com">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="phone" class="form-label fw-semibold">Phone</label>
+                            <input type="text" name="phone" id="phone" class="form-control form-control-lg rounded-pill" value="{{ old('phone', $supplier->phone) }}" placeholder="e.g., +91 9876543210">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="gstin" class="form-label fw-semibold">GSTIN</label>
+                            <input type="text" name="gstin" id="gstin" class="form-control form-control-lg rounded-pill" value="{{ old('gstin', $supplier->gstin) }}" placeholder="e.g., 27ABCDE1234F1Z5">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="address" class="form-label fw-semibold">Address</label>
+                            <textarea name="address" id="address" class="form-control rounded-3" rows="4" placeholder="Full address including city, state, zip">{{ old('address', $supplier->address) }}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-5">
+                            <a href="{{ route('suppliers.index') }}" class="btn btn-outline-secondary btn-lg rounded-pill px-4">Cancel</a>
+                            <button type="submit" class="btn btn-teal-primary btn-lg rounded-pill px-5 shadow">
+                                <i class="bi bi-arrow-clockwise me-2"></i> Update Supplier
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-    @endif
-
-    <form action="{{ route('suppliers.update', $supplier->id) }}" method="POST" autocomplete="off">
-        @csrf
-        @method('PUT')
-
-        <div class="card shadow-sm p-4">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="name" class="form-label">Supplier Name</label>
-                    <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $supplier->name) }}" required>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label for="contact_number" class="form-label">Contact Number</label>
-                    <input type="text" name="contact_number" id="contact_number" class="form-control" value="{{ old('contact_number', $supplier->contact_number) }}">
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" name="email" id="email" class="form-control" value="{{ old('email', $supplier->email) }}">
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label for="address" class="form-label">Address</label>
-                    <input type="text" name="address" id="address" class="form-control" value="{{ old('address', $supplier->address) }}">
-                </div>
-            </div>
-
-            <div class="mb-3 d-flex align-items-center">
-                <label for="statusToggle" class="custom-label mb-0">Active Status</label>
-                <div class="form-check form-switch ms-auto mb-0">
-                    <!-- Hidden input to handle unchecked status (inactive) -->
-                    <input type="hidden" name="status" value="inactive">
-                    <input class="form-check-input" type="checkbox" id="statusToggle" name="status" value="active"
-                        {{ isset($supplier) && $supplier->status === 'active' ? 'checked' : '' }}>
-                </div>
-            </div>
-
-
-            <div class="d-flex justify-content-between mt-4">
-                <a href="{{ route('suppliers.index') }}" class="btn btn-secondary">Cancel</a>
-                <button type="submit" class="btn" style="background-color: #00838f; color: white;">Update Supplier</button>
-            </div>
-        </div>
-    </form>
+    </div>
 </div>
-
-<style>
-
-    .custom-label {
-        margin-right: 15px; /* Increase as needed */
-    }
-
-    .form-switch {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .form-check-input[type="checkbox"] {
-        width: 2.5em;
-        height: 1.4em;
-        background-color: #ddd;
-        border-radius: 1em;
-        position: relative;
-        appearance: none;
-        outline: none;
-        transition: background-color 0.3s ease;
-    }
-
-    .form-check-input:checked {
-        background-color: #00838f;
-    }
-
-    .form-check-input::before {
-        content: "";
-        position: absolute;
-        top: 0.1em;
-        left: 0.1em;
-        width: 1.2em;
-        height: 1.2em;
-        background-color: white;
-        border-radius: 50%;
-        transition: transform 0.3s ease;
-    }
-
-    .form-check-input:checked::before {
-        transform: translateX(1.1em);
-    }
-</style>
 @endsection

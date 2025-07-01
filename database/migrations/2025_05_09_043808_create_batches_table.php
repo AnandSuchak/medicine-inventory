@@ -17,6 +17,7 @@ return new class extends Migration
         $table->string('status')->default('Active');  // Default status
         $table->bigInteger('supplier_id')->unsigned();  // Supplier ID (no nullable)
         $table->timestamps();  // Created at and Updated at
+        $table->date('purchase_date');
 
         // Add foreign key constraint for supplier_id (no nullable)
         $table->foreign('supplier_id')

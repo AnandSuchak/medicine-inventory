@@ -50,11 +50,26 @@ Route::resource('suppliers', SupplierController::class);
 Route::resource('customers', CustomerController::class);
 
 // Bills CRUD
-Route::resource('bills', BillController::class);
+Route::prefix('bills')->name('bills.')->group(function () {
+    Route::get('/', [BillController::class, 'index'])->name('index');
+    Route::get('/create', [BillController::class, 'create'])->name('create');
+    Route::post('/', [BillController::class, 'store'])->name('store');
+    Route::get('/{bill}', [BillController::class, 'show'])->name('show');
+
+    // NEW: Edit and Update routes for BillController
+    Route::get('/{bill}/edit', [BillController::class, 'edit'])->name('edit');
+    Route::put('/{bill}', [BillController::class, 'update'])->name('update');
+
+    // API Routes for Bills
+    Route::get('/api/medicine-stock-info/{medicineId}', [BillController::class, 'getMedicineStockInfo'])->name('api.medicine_stock_info');
+    Route::get('/api/medicine-search', [BillController::class, 'searchMedicines'])->name('api.medicine_search');
+    Route::get('/api/customer-search', [BillController::class, 'searchCustomers'])->name('api.customer_search');
+});
 
 // Stocks (Custom Routes)
+Route::get('/stocks', [App\Http\Controllers\StockController::class, 'index'])->name('stocks.index');
+Route::get('/stocks/{medicine}', [App\Http\Controllers\StockController::class, 'show'])->name('stocks.show');
 Route::get('/stock', [BatchController::class, 'indexStock'])->name('stock.index'); // Legacy stock index (if needed)
-Route::get('/stocks', [StockController::class, 'index'])->name('stocks.index');    // New stock index
-Route::get('/stocks/{medicine}', [StockController::class, 'show'])->name('stocks.show');
-// web.php
+
+// web.php (Duplicate - assuming this was leftover from previous snippets)
 Route::get('/get-batches/{medicine}', [BatchController::class, 'getByMedicine']);

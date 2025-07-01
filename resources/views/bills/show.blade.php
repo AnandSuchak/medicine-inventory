@@ -1,78 +1,81 @@
-@extends('layouts.app')
+@extends('layouts.app') {{-- Adjust your layout file as needed --}}
 
 @section('content')
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-teal">Bill #{{ $bill->bill_number }}</h2>
-        <a href="{{ route('bills.index') }}" class="btn btn-outline-secondary">← Back to All Bills</a>
-    </div>
-
-    <div class="card shadow-sm rounded-4 mb-4">
-        <div class="card-body">
-            <p><strong>Customer:</strong> {{ $bill->customer->name ?? 'N/A' }}</p>
-            <p>
-                <strong>Status:</strong>
-                <span class="badge 
-                    @if($bill->status == 'Ordered') bg-warning 
-                    @elseif($bill->status == 'Completed') bg-success 
-                    @else bg-secondary 
-                    @endif">
-                    {{ $bill->status }}
-                </span>
-            </p>
-            <p><strong>Date:</strong> {{ $bill->created_at->format('d M Y, h:i A') }}</p>
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4>Bill Details - #{{ $bill->bill_number }}</h4>
+            <a href="{{ route('bills.index') }}" class="btn btn-secondary btn-sm">Back to Bills</a>
         </div>
-    </div>
+        <div class="card-body">
+            @if (session('success'))
+                <div class="alert alert-success">
+                    {{ session('success') }}
+                </div>
+            @endif
 
-    <div class="card shadow-sm rounded-4">
-        <div class="card-body p-0">
-            <table class="table table-striped mb-0">
-                <thead class="bg-teal text-white">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <strong>Customer:</strong> {{ $bill->customer->name ?? 'N/A' }} <br>
+                    <strong>Phone:</strong> {{ $bill->customer->phone ?? 'N/A' }} <br>
+                    <strong>Address:</strong> {{ $bill->customer->address ?? 'N/A' }}
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <strong>Bill Date:</strong> {{ \Carbon\Carbon::parse($bill->bill_date)->format('d M, Y') }} <br>
+                    <strong>Bill Number:</strong> {{ $bill->bill_number }} <br>
+                    <strong>Status:</strong> {{ ucfirst($bill->status) }}
+                </div>
+            </div>
+
+            <hr>
+
+            <h5>Items on Bill</h5>
+            <table class="table table-bordered table-striped">
+                <thead>
                     <tr>
+                        <th>#</th>
                         <th>Medicine</th>
-                        <th>Batch Code</th>
-                        <th>Expiry Date</th>
-                        <th>Qty</th>
+                        <th>Quantity</th>
                         <th>Unit Price</th>
-                        <th>Total</th>
+                        <th>GST %</th>
+                        <th>GST Amount</th>
+                        <th>Sub Total</th>
+                        <th>Total After Tax</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($bill->medicines as $medicine)
-                    <tr>
-                        <td>{{ $medicine->name }}</td>
-                        <td>{{ $medicine->pivot->batch_code ?? 'N/A' }}</td>
-                        <td>
-                            {{ $medicine->pivot->expiry_date 
-                                ? \Carbon\Carbon::parse($medicine->pivot->expiry_date)->format('M Y') 
-                                : 'N/A' }}
-                        </td>
-                        <td>{{ $medicine->pivot->quantity }}</td>
-                        <td>₹{{ number_format($medicine->pivot->unit_price, 2) }}</td>
-                        <td>₹{{ number_format($medicine->pivot->total_price, 2) }}</td>
-                    </tr>
+                    @php $i = 1; @endphp
+                    @foreach ($bill->billItems as $item)
+                        <tr>
+                            <td>{{ $i++ }}</td>
+                            <td>{{ $item->medicine->name ?? 'N/A' }} (Batch: {{ $item->batch->batch_number ?? 'N/A' }})</td>
+                            <td>{{ $item->quantity }}</td>
+                            <td>₹{{ number_format($item->unit_price, 2) }}</td>
+                            <td>{{ number_format($item->gst_rate_percentage, 2) }}%</td>
+                            <td>₹{{ number_format($item->item_gst_amount, 2) }}</td>
+                            <td>₹{{ number_format($item->sub_total, 2) }}</td>
+                            <td>₹{{ number_format($item->total_amount_after_tax, 2) }}</td>
+                        </tr>
                     @endforeach
                 </tbody>
-                <tfoot>
-                    <tr>
-                        <th colspan="5" class="text-end text-teal fs-5">Grand Total</th>
-                        <th class="fs-5 text-teal">₹{{ number_format($bill->total_amount, 2) }}</th>
-                    </tr>
-                </tfoot>
             </table>
+
+            <div class="row mt-4">
+                <div class="col-md-6 offset-md-6 text-end">
+                    <p><strong>Sub Total (Before Tax):</strong> ₹{{ number_format($bill->sub_total_before_tax, 2) }}</p>
+                    <p><strong>Total GST Amount:</strong> ₹{{ number_format($bill->total_gst_amount, 2) }}</p>
+                    <p><strong>Discount Amount:</strong> ₹{{ number_format($bill->discount_amount, 2) }}</p>
+                    <h4><strong>Net Amount:</strong> ₹{{ number_format($bill->net_amount, 2) }}</h4>
+                </div>
+            </div>
+
+            @if ($bill->notes)
+                <div class="mt-4">
+                    <strong>Notes:</strong>
+                    <p>{{ $bill->notes }}</p>
+                </div>
+            @endif
         </div>
     </div>
 </div>
-
-<style>
-    .text-teal {
-        color: #00838f;
-    }
-    .bg-teal {
-        background-color: #00838f;
-    }
-    .btn-outline-secondary {
-        border-radius: 6px;
-    }
-</style>
 @endsection

@@ -1,35 +1,74 @@
 <?php
+
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Medicine;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany; // Add this for billItems()
 
 class Batch extends Model
 {
+    use HasFactory;
 
-      protected $fillable = [
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'batches';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
         'batch_number',
-        'supplier_id',
+        'mfg_date',
+        'notes',
         'status',
+        'purchase_date',
+        'supplier_id',
     ];
 
-public function medicines()
-{
-    return $this->belongsToMany(Medicine::class)
-                ->withPivot('quantity', 'price', 'ptr', 'expiry_date')
-                ->withTimestamps();
-}
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'mfg_date'      => 'date',
+        'purchase_date' => 'date',
+    ];
 
+    // --- Relationships ---
 
-
-    public function stocks()
+    /**
+     * Get the medicines associated with the batch (Many-to-Many).
+     */
+    public function medicines(): BelongsToMany
     {
-        return $this->hasMany(Stock::class);
+        return $this->belongsToMany(Medicine::class)
+                    ->withPivot('quantity', 'price', 'ptr', 'gst_percent', 'expiry_date')
+                    ->withTimestamps();
     }
 
-public function supplier()
-{
-    return $this->belongsTo(Supplier::class);
-}
+    /**
+     * Get the supplier that owns the batch (BelongsTo).
+     */
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
+    }
 
+    /**
+     * Get the bill items that belong to this batch.
+     * This is useful for tracking sales from a specific batch.
+     */
+    public function billItems(): HasMany // Add this new relationship
+    {
+        return $this->hasMany(BillItem::class);
+    }
 }

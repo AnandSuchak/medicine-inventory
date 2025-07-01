@@ -1,94 +1,59 @@
-@extends('layouts.app')
+@extends('layouts.app') {{-- Adjust your layout file as needed --}}
 
 @section('content')
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0 text-teal">All Bills</h2>
-        <a href="{{ route('bills.create') }}" class="btn btn-teal">Generate New Bill</a>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>All Bills</h2>
+        <a href="{{ route('bills.create') }}" class="btn btn-primary">Generate New Bill</a>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success shadow-sm">{{ session('success') }}</div>
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
     @endif
 
-    <div class="card shadow-sm rounded-4">
-        <div class="card-body p-0">
-            <table class="table table-hover mb-0">
-                <thead class="bg-teal text-white rounded-top-4">
-                    <tr>
-                        <th>Bill No</th>
-                        <th>Customer</th>
-                        <th>Total Amount</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                        <th class="text-center">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($bills as $bill)
-                    <tr class="align-middle">
-                        <td>
-                            <a href="{{ route('bills.show', $bill->id) }}" class="text-decoration-none text-teal fw-semibold">
-                                {{ $bill->bill_number }}
-                            </a>
-                        </td>
-                        <td>{{ $bill->customer->name ?? 'N/A' }}</td>
-                        <td>₹{{ number_format($bill->total_amount, 2) }}</td>
-                        <td>
-                            <span class="badge 
-                                @if($bill->status == 'Ordered') bg-warning 
-                                @elseif($bill->status == 'Completed') bg-success 
-                                @else bg-secondary 
-                                @endif">
-                                {{ $bill->status }}
-                            </span>
-                        </td>
-                        <td>{{ $bill->created_at->format('d M Y, h:i A') }}</td>
-                        <td class="text-center">
-                            <a href="{{ route('bills.show', $bill->id) }}" class="btn btn-outline-info btn-sm me-1">View</a>
-                            <a href="{{ route('bills.edit', $bill->id) }}" class="btn btn-outline-warning btn-sm">Edit</a>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="text-center text-muted">No bills found.</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+    <div class="card">
+        <div class="card-body">
+            @if ($bills->isEmpty())
+                <p>No bills generated yet.</p>
+            @else
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Bill No.</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Total Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($bills as $bill)
+                            <tr>
+                                <td>{{ $bill->bill_number }}</td>
+                                <td>{{ \Carbon\Carbon::parse($bill->bill_date)->format('d M, Y') }}</td>
+                                <td>{{ $bill->customer->name ?? 'N/A' }}</td>
+                                <td>₹{{ number_format($bill->net_amount, 2) }}</td>
+                                <td>{{ ucfirst($bill->status) }}</td>
+                                <td>
+                                    <a href="{{ route('bills.show', $bill->id) }}" class="btn btn-info btn-sm">View</a>
+                                    {{-- NEW: Edit Button --}}
+                                    <a href="{{ route('bills.edit', $bill->id) }}" class="btn btn-warning btn-sm ms-1">Edit</a>
+                                    {{-- Add other actions like print if needed later --}}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-center mt-4">
+                    {{ $bills->links() }}
+                </div>
+
+            @endif
         </div>
     </div>
-
-    {{-- Pagination (Optional) --}}
-    @if($bills instanceof \Illuminate\Pagination\LengthAwarePaginator)
-    <div class="mt-3">
-        {{ $bills->links() }}
-    </div>
-    @endif
 </div>
-
-<style>
-    .text-teal {
-        color: #00838f;
-    }
-    .btn-teal {
-        background-color: #00838f;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 6px;
-    }
-    .btn-teal:hover {
-        background-color: #006064;
-    }
-    .bg-teal {
-        background-color: #00838f;
-    }
-    .rounded-top-4 {
-        border-radius: 0.5rem 0.5rem 0 0;
-    }
-    tbody tr:hover {
-        background-color: #e0f2f1;
-    }
-</style>
 @endsection

@@ -1,83 +1,90 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
+<div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-teal">Batch List</h2>
-        <a href="{{ route('batches.create') }}" class="btn btn-teal">+ Add New Batch</a>
+        <h2 class="text-teal fw-bold mb-0">Batch Management</h2>
+        <a href="{{ route('batches.create') }}" class="btn btn-teal-primary btn-lg rounded-pill shadow-sm">
+            <i class="bi bi-plus-circle me-2"></i> Create New Batch
+        </a>
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success shadow-sm">{{ session('success') }}</div>
+        <div class="alert alert-success alert-dismissible fade show shadow-sm rounded-3" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     @endif
 
-    <div class="card shadow-sm rounded-4">
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm rounded-3" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <div class="card shadow-lg border-0 rounded-4">
         <div class="card-body p-0">
-            <table class="table table-hover mb-0">
-                <thead class="bg-teal text-white rounded-top-4">
-                    <tr>
-                        <th>ID</th>
-                        <th>Batch Number</th>
-                        <th>Supplier</th>
-                         <th>Created At</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($batches as $batch)
-    <tr>
-        <td>{{ $batch->id }}</td>
-        <td>
-    <a href="{{ route('batches.show', $batch->id) }}" class="text-teal text-decoration-underline">
-        {{ $batch->batch_number }}
-    </a>
-</td>
-
-        <td>{{ $batch->supplier->name ?? 'N/A' }}</td>
-        <td>{{ $batch->created_at->format('d-m-Y h:i A') }}</td> <!-- Formatted Date -->
-        <td class="text-center">
-            @if($batch->medicines_count > 0)
-            <a href="{{ route('batches.medicines.edit', ['batch' => $batch->id]) }}" class="btn btn-primary">Edit Batch</a>   
+            @if($batches->isEmpty())
+                <div class="text-center p-5">
+                    <h4 class="text-muted mb-3">No batches found.</h4>
+                    <p class="text-muted">It looks like your batch list is empty. Start by creating a new batch!</p>
+                    <a href="{{ route('batches.create') }}" class="btn btn-teal-primary mt-3">
+                        <i class="bi bi-plus-circle me-2"></i> Create First Batch
+                    </a>
+                </div>
             @else
-                <a href="{{ route('batches.medicines.create', ['batch' => $batch->id]) }}" class="btn btn-success">Add Medicine</a>
-
+                <div class="table-responsive">
+                    <table class="table table-hover table-borderless align-middle mb-0">
+                        <thead class="bg-teal text-white rounded-top-4">
+                            <tr>
+                                <th scope="col" class="py-3 ps-4 rounded-top-start-4">Batch Number</th>
+                                <th scope="col" class="py-3">Supplier</th>
+                                <th scope="col" class="py-3">Purchase Date</th>
+                                <th scope="col" class="py-3">Status</th>
+                                <th scope="col" class="py-3 text-center">Medicines Count</th>
+                                <th scope="col" class="py-3 text-center rounded-top-end-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($batches as $batch)
+                                <tr class="border-bottom">
+                                    <td class="ps-4 py-3 fw-semibold">{{ $batch->batch_number }}</td>
+                                    <td>{{ $batch->supplier->name ?? 'N/A' }}</td>
+                                    <td>{{ $batch->purchase_date->format('d M, Y') }}</td>
+                                    <td>
+                                        <span class="badge {{
+                                            $batch->status == 'active' ? 'bg-success' :
+                                            ($batch->status == 'inactive' ? 'bg-warning text-dark' :
+                                            ($batch->status == 'completed' ? 'bg-info' : 'bg-secondary'))
+                                        }} rounded-pill px-3 py-2">
+                                            {{ ucfirst($batch->status) }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">{{ $batch->medicines_count }}</td>
+                                    <td class="text-center py-3">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a href="{{ route('batches.show', $batch->id) }}" class="btn btn-outline-info btn-sm rounded-pill px-3">View</a>
+                                            <a href="{{ route('batches.edit', $batch->id) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">Edit</a>
+                                            <a href="{{ route('batches.medicines.create', $batch->id) }}" class="btn btn-outline-success btn-sm rounded-pill px-3">Add Medicines</a>
+                                            <form action="{{ route('batches.destroy', $batch->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="return confirm('Are you sure you want to delete this batch?')">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             @endif
-
-            <form action="{{ route('batches.destroy', $batch->id) }}" method="POST" class="d-inline">
-                @csrf
-                @method('DELETE')
-                <button class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
-            </form>
-        </td>
-    </tr>
-@empty
-    <tr>
-        <td colspan="5" class="text-center text-muted">No batches found.</td>
-    </tr>
-@endforelse
-
-                </tbody>
-            </table>
         </div>
     </div>
-</div>
 
-<style>
-    .text-teal {
-        color: #00838f;
-    }
-    .btn-teal {
-        background-color: #00838f;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 6px;
-    }
-    .btn-teal:hover {
-        background-color: #006064;
-    }
-    .bg-teal {
-        background-color: #00838f;
-    }
-</style>
+    <div class="d-flex justify-content-center mt-5">
+        {{ $batches->links('pagination::bootstrap-5') }}
+    </div>
+</div>
 @endsection
